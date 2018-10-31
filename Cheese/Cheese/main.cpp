@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <math.h>
 #include <stdlib.h>
 #include <strsafe.h>
 #include <tchar.h>
@@ -8,6 +9,7 @@
 
 #define NUMHOOKS 1
 #define IDM_MOUSE 0
+#define PI 3.14159265
 
 // Global variables 
 
@@ -22,6 +24,9 @@ MYHOOKDATA myhookdata[NUMHOOKS];
 POINT cursorPos;
 int xpos;
 int ypos;
+int vx;
+int vy;
+int angle = 45;
 
 HWND gh_hwndMain;
 
@@ -230,6 +235,12 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 			wParam, lParam);
 	xpos = LOWORD(lParam);
 	ypos = HIWORD(lParam);
+
+	vx = xpos - cursorPos.x;
+	vy = ypos - cursorPos.y;
+
+	SetCursorPos(cursorPos.x+(cos((angle*PI/180.0)*vx) - sin((angle*PI / 180.0)*vy)), cursorPos.y+(sin((angle*PI / 180.0)*vx) + cos((angle*PI / 180.0)*vy)) );
+	GetCursorPos(&cursorPos);
 
 	OutputDebugString(_T("In mouse proc/n"));
 
