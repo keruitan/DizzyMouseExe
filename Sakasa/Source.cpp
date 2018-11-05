@@ -4,10 +4,12 @@
 #include <string.h>
 #include <strsafe.h>
 #include <tchar.h>
+#include "Cheese.h"
 
 #define NUMHOOKS 1
 #define IDM_MOUSE 0
 #define PI 3.14159265
+UINT UWM_MOUSEMOVE = ::RegisterWindowMessage(UWM_MOUSEMOVE_MSG);
 
 // Global variables
 BOOL IsWinVistaOrLater()
