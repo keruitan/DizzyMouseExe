@@ -38,7 +38,7 @@ LONG vy;
 int x;
 int y;
 double angle = 45.0;
-double rad = angle * PI / 180.0;
+double rad = -angle * PI / 180.0;
 
 // The main window class name.
 static TCHAR szWindowClass[] = _T("DesktopApp");
@@ -245,10 +245,10 @@ LRESULT CALLBACK WndProc(
 				x = prevPos.x + round(cos(rad*vx) - sin(rad*vy));
 			}
 			if (vy < 0) {
-				y = prevPos.y - round(sin(rad*vx) + cos(rad*vy));
+				y = prevPos.y + round(sin(rad*vx) + cos(rad*vy));
 			}
 			else {
-				y = prevPos.y + round(sin(rad*vx) + cos(rad*vy));
+				y = prevPos.y - round(sin(rad*vx) + cos(rad*vy));
 			}
 			
 			wchar_t buf[1024];
