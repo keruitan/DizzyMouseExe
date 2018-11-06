@@ -5,11 +5,7 @@
 #include <strsafe.h>
 #include <tchar.h>
 #include "Cheese.h"
-
-#define NUMHOOKS 1
-#define IDM_MOUSE 0
-#define PI 3.14159265
-static const UINT UWM_MOUSEMOVE = RegisterWindowMessage(UWM_MOUSEMOVE_MSG);
+#include "main.h"
 
 // Global variables
 BOOL IsWinVistaOrLater()
@@ -34,21 +30,15 @@ BOOL IsWinVistaOrLater()
 
 NOTIFYICONDATA nid = {};
 
-//typedef struct _MYHOOKDATA
-//{
-//	int nType;
-//	HOOKPROC hkprc;
-//	HHOOK hhook;
-//} MYHOOKDATA;
-//
-//MYHOOKDATA myhookdata[NUMHOOKS];
-POINT cursorPos;
-POINT pt;
-int xpos;
-int ypos;
-int vx;
-int vy;
+//static const UINT UWM_MOUSEMOVE;
+POINT currPos;
+POINT prevPos;
+LONG vx;
+LONG vy;
+int x;
+int y;
 double angle = 45.0;
+double rad = angle * PI / 180.0;
 
 // The main window class name.
 static TCHAR szWindowClass[] = _T("DesktopApp");
@@ -112,7 +102,7 @@ int CALLBACK WinMain(
 		szTitle,
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		500, 100,
+		500, 500,
 		NULL,
 		NULL,
 		hInstance,
@@ -149,6 +139,16 @@ int CALLBACK WinMain(
 	}
 	nid.hIcon = LoadIcon(hInst, IDI_APPLICATION);
 	Shell_NotifyIcon(NIM_ADD, &nid) ? S_OK : E_FAIL;
+	prevPos.x = -1;
+	/*UWM_MOUSEMOVE = ::RegisterWindowMessage(UWM_MOUSEMOVE_MSG);
+	if (!UWM_MOUSEMOVE) {
+		MessageBox(NULL,
+			_T("Call to RegisterWindowMessage failed!"),
+			_T("Windows Desktop Guided Tour"),
+			NULL);
+
+		return 1;
+	}*/
 
 	// The parameters to ShowWindow explained:
 	// hWnd: the value returned from CreateWindow
@@ -178,8 +178,9 @@ LRESULT CALLBACK WndProc(
 	int index;
 	static HMENU hmenu;*/
 
-	HDC hdc;            // handle to device context 
-	POINT pt;           // current cursor location 
+	//LPMOUSEHOOKSTRUCT mouse; // mousehookstruct data
+	//POINT pos;
+	HDC hdc;            // handle to device context
 	PAINTSTRUCT ps;
 	TCHAR greeting[] = _T("Hello, Windows desktop!");
 	TCHAR greeting2[] = _T("Hello, WinVista or later!");
@@ -214,63 +215,48 @@ LRESULT CALLBACK WndProc(
 
 		//	index = LOWORD(wParam);
 		//	OutputDebugString(_T("Mouse hook\n"));
-		//	// If the selected type of hook procedure isn't 
-		//	// installed yet, install it and check the 
-		//	// associated menu item. 
-
-		//	if (!afHooks[index])
-		//	{
-		//		GetCursorPos(&cursorPos);
-		//		myhookdata[index].hhook = SetWindowsHookEx(
-		//			myhookdata[index].nType,
-		//			myhookdata[index].hkprc,
-		//			(HINSTANCE)NULL, GetCurrentThreadId());
-		//		CheckMenuItem(hmenu, index,
-		//			MF_BYCOMMAND | MF_CHECKED);
-		//		afHooks[index] = TRUE;
-		//	}
-
-		//	// If the selected type of hook procedure is 
-		//	// already installed, remove it and remove the 
-		//	// check mark from the associated menu item. 
-
-		//	else
-		//	{
-		//		UnhookWindowsHookEx(myhookdata[index].hhook);
-		//		CheckMenuItem(hmenu, index,
-		//			MF_BYCOMMAND | MF_UNCHECKED);
-		//		afHooks[index] = FALSE;
-		//	}
 
 		//default:
 		//	return (DefWindowProc(hWnd, message, wParam,
 		//		lParam));
 		//}
 		break;
-	/*case UWM_MOUSEMOVE:
-		OutputDebugString(_T("Msg received/n"));
-		break;*/
+	case WH_MOUSE:
+		OutputDebugString(_T("Msg received\n"));
+		//mouse = (LPMOUSEHOOKSTRUCT)lParam;
+		if (prevPos.x<0) {
+			OutputDebugString(_T("1st\n"));
+			//POINT pos = mouse->pt;
+			//prevPos.x = 1;
+			GetCursorPos(&prevPos);
+		}
+		else {
+			OutputDebugString(_T("gotcha\n"));
+			GetCursorPos(&currPos);
+			vx = currPos.x - prevPos.x; // vector coordinates, now rotate?
+			vy = currPos.y - prevPos.y;
+			x = cos(rad*vx) - sin(rad*vy) + prevPos.x;
+			y = sin(rad*vx) + cos(rad*vy) + prevPos.y;
+			
+			//SetCursorPos(x, y);
+			prevPos.x = x;
+			prevPos.y = y;
+		}
+		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 
-		// Here your application is laid out.
-		// For this introduction, we just print out "Hello, Windows desktop!"
-		// in the top left corner.
 		if (IsWinVistaOrLater())
 		{
 			TextOut(hdc,
 				5, 5,
 				greeting2, _tcslen(greeting2));
-		}
-		else
+		} else
 		{
 			TextOut(hdc,
 				5, 5,
 				greeting, _tcslen(greeting));
 		}
-		
-		// End application-specific layout section.
-
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
@@ -284,6 +270,10 @@ LRESULT CALLBACK WndProc(
 	return NULL;
 }
 
+void rotateCursor() {
+
+}
+
 /****************************************************************
 WH_MOUSE hook procedure
 ****************************************************************/
@@ -294,8 +284,8 @@ WH_MOUSE hook procedure
 //		return CallNextHookEx(myhookdata[IDM_MOUSE].hhook, nCode,
 //			wParam, lParam);
 //	GetCursorPos(&pt);
-//	//xpos = LOWORD(lParam);
-//	//ypos = HIWORD(lParam);
+//	xpos = LOWORD(lParam);
+//	ypos = HIWORD(lParam);
 //
 //	vx = pt.x - cursorPos.x;
 //	vy = pt.y - cursorPos.y;
