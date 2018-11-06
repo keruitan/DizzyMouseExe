@@ -9,7 +9,7 @@
 #define NUMHOOKS 1
 #define IDM_MOUSE 0
 #define PI 3.14159265
-UINT UWM_MOUSEMOVE = ::RegisterWindowMessage(UWM_MOUSEMOVE_MSG);
+static const UINT UWM_MOUSEMOVE = RegisterWindowMessage(UWM_MOUSEMOVE_MSG);
 
 // Global variables
 BOOL IsWinVistaOrLater()
@@ -34,14 +34,14 @@ BOOL IsWinVistaOrLater()
 
 NOTIFYICONDATA nid = {};
 
-typedef struct _MYHOOKDATA
-{
-	int nType;
-	HOOKPROC hkprc;
-	HHOOK hhook;
-} MYHOOKDATA;
-
-MYHOOKDATA myhookdata[NUMHOOKS];
+//typedef struct _MYHOOKDATA
+//{
+//	int nType;
+//	HOOKPROC hkprc;
+//	HHOOK hhook;
+//} MYHOOKDATA;
+//
+//MYHOOKDATA myhookdata[NUMHOOKS];
 POINT cursorPos;
 POINT pt;
 int xpos;
@@ -59,7 +59,7 @@ static TCHAR szTitle[] = _T("Test Rotate");
 HINSTANCE hInst;
 
 // Forward declaration
-LRESULT WINAPI MouseProc(int, WPARAM, LPARAM);
+//LRESULT WINAPI MouseProc(int, WPARAM, LPARAM);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 int CALLBACK WinMain(
@@ -174,9 +174,9 @@ LRESULT CALLBACK WndProc(
 	WPARAM wParam,        // additional information 
 	LPARAM lParam)        // additional information 
 {
-	static BOOL afHooks[NUMHOOKS];
+	/*static BOOL afHooks[NUMHOOKS];
 	int index;
-	static HMENU hmenu;
+	static HMENU hmenu;*/
 
 	HDC hdc;            // handle to device context 
 	POINT pt;           // current cursor location 
@@ -190,63 +190,66 @@ LRESULT CALLBACK WndProc(
 
 		// Save the menu handle
 
-		hmenu = GetMenu(hWnd);
+		//hmenu = GetMenu(hWnd);
 
 		// Initialize structures with hook data. The menu-item identifiers are 
 		// defined as 0 through 6 in the header file app.h. They can be used to 
 		// identify array elements both here and during the WM_COMMAND message. 
 
-		myhookdata[IDM_MOUSE].nType = WH_MOUSE;
-		myhookdata[IDM_MOUSE].hkprc = MouseProc;
+		/*myhookdata[IDM_MOUSE].nType = WH_MOUSE;
+		myhookdata[IDM_MOUSE].hkprc = MouseProc;*/
 
 		// Initialize all flags in the array to FALSE. 
 
-		memset(afHooks, FALSE, sizeof(afHooks));
-		OutputDebugString(_T("create/n"));
-		OutputDebugString(_T("command/n"));
-		switch (LOWORD(wParam))
-		{
-			// The user selected a hook command from the menu. 
-		case IDM_MOUSE:
+		//memset(afHooks, FALSE, sizeof(afHooks));
+		OutputDebugString(_T("create\n"));
+		setHook(hWnd);
+		//switch (LOWORD(wParam))
+		//{
+		//	// The user selected a hook command from the menu. 
+		//case IDM_MOUSE:
 
-			// Use the menu-item identifier as an index 
-			// into the array of structures with hook data. 
+		//	// Use the menu-item identifier as an index 
+		//	// into the array of structures with hook data. 
 
-			index = LOWORD(wParam);
-			OutputDebugString(_T("Mouse hook/n"));
-			// If the selected type of hook procedure isn't 
-			// installed yet, install it and check the 
-			// associated menu item. 
+		//	index = LOWORD(wParam);
+		//	OutputDebugString(_T("Mouse hook\n"));
+		//	// If the selected type of hook procedure isn't 
+		//	// installed yet, install it and check the 
+		//	// associated menu item. 
 
-			if (!afHooks[index])
-			{
-				GetCursorPos(&cursorPos);
-				myhookdata[index].hhook = SetWindowsHookEx(
-					myhookdata[index].nType,
-					myhookdata[index].hkprc,
-					(HINSTANCE)NULL, GetCurrentThreadId());
-				CheckMenuItem(hmenu, index,
-					MF_BYCOMMAND | MF_CHECKED);
-				afHooks[index] = TRUE;
-			}
+		//	if (!afHooks[index])
+		//	{
+		//		GetCursorPos(&cursorPos);
+		//		myhookdata[index].hhook = SetWindowsHookEx(
+		//			myhookdata[index].nType,
+		//			myhookdata[index].hkprc,
+		//			(HINSTANCE)NULL, GetCurrentThreadId());
+		//		CheckMenuItem(hmenu, index,
+		//			MF_BYCOMMAND | MF_CHECKED);
+		//		afHooks[index] = TRUE;
+		//	}
 
-			// If the selected type of hook procedure is 
-			// already installed, remove it and remove the 
-			// check mark from the associated menu item. 
+		//	// If the selected type of hook procedure is 
+		//	// already installed, remove it and remove the 
+		//	// check mark from the associated menu item. 
 
-			else
-			{
-				UnhookWindowsHookEx(myhookdata[index].hhook);
-				CheckMenuItem(hmenu, index,
-					MF_BYCOMMAND | MF_UNCHECKED);
-				afHooks[index] = FALSE;
-			}
+		//	else
+		//	{
+		//		UnhookWindowsHookEx(myhookdata[index].hhook);
+		//		CheckMenuItem(hmenu, index,
+		//			MF_BYCOMMAND | MF_UNCHECKED);
+		//		afHooks[index] = FALSE;
+		//	}
 
-		default:
-			return (DefWindowProc(hWnd, message, wParam,
-				lParam));
-		}
+		//default:
+		//	return (DefWindowProc(hWnd, message, wParam,
+		//		lParam));
+		//}
 		break;
+	/*case UWM_MOUSEMOVE:
+		OutputDebugString(_T("Msg received/n"));
+		break;*/
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 
@@ -271,6 +274,7 @@ LRESULT CALLBACK WndProc(
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
+		unHook(hWnd);
 		PostQuitMessage(0);
 		break;
 	default:
@@ -284,22 +288,22 @@ LRESULT CALLBACK WndProc(
 WH_MOUSE hook procedure
 ****************************************************************/
 
-LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-	if (nCode < 0)  // do not process the message 
-		return CallNextHookEx(myhookdata[IDM_MOUSE].hhook, nCode,
-			wParam, lParam);
-	GetCursorPos(&pt);
-	//xpos = LOWORD(lParam);
-	//ypos = HIWORD(lParam);
-
-	vx = pt.x - cursorPos.x;
-	vy = pt.y - cursorPos.y;
-
-	SetCursorPos(cursorPos.x + (cos((angle*PI / 180.0)*vx) - sin((angle*PI / 180.0)*vy)), cursorPos.y + (sin((angle*PI / 180.0)*vx) + cos((angle*PI / 180.0)*vy)));
-	GetCursorPos(&cursorPos);
-
-	OutputDebugString(_T("In mouse proc/n"));
-
-	return CallNextHookEx(myhookdata[IDM_MOUSE].hhook, nCode, wParam, lParam);
-}
+//LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
+//{
+//	if (nCode < 0)  // do not process the message 
+//		return CallNextHookEx(myhookdata[IDM_MOUSE].hhook, nCode,
+//			wParam, lParam);
+//	GetCursorPos(&pt);
+//	//xpos = LOWORD(lParam);
+//	//ypos = HIWORD(lParam);
+//
+//	vx = pt.x - cursorPos.x;
+//	vy = pt.y - cursorPos.y;
+//
+//	SetCursorPos(cursorPos.x + (cos((angle*PI / 180.0)*vx) - sin((angle*PI / 180.0)*vy)), cursorPos.y + (sin((angle*PI / 180.0)*vx) + cos((angle*PI / 180.0)*vy)));
+//	GetCursorPos(&cursorPos);
+//
+//	OutputDebugString(_T("In mouse proc/n"));
+//
+//	return CallNextHookEx(myhookdata[IDM_MOUSE].hhook, nCode, wParam, lParam);
+//}
