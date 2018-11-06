@@ -233,14 +233,35 @@ LRESULT CALLBACK WndProc(
 		else {
 			OutputDebugString(_T("gotcha\n"));
 			GetCursorPos(&currPos);
+			if (currPos.x == prevPos.x && currPos.y == prevPos.y) {
+				break;
+			}
 			vx = currPos.x - prevPos.x; // vector coordinates, now rotate?
 			vy = currPos.y - prevPos.y;
-			x = cos(rad*vx) - sin(rad*vy) + prevPos.x;
-			y = sin(rad*vx) + cos(rad*vy) + prevPos.y;
+			if (vx < 0) {
+				x = prevPos.x - round(cos(rad*vx) - sin(rad*vy));
+			}
+			else {
+				x = prevPos.x + round(cos(rad*vx) - sin(rad*vy));
+			}
+			if (vy < 0) {
+				y = prevPos.y - round(sin(rad*vx) + cos(rad*vy));
+			}
+			else {
+				y = prevPos.y + round(sin(rad*vx) + cos(rad*vy));
+			}
 			
-			//SetCursorPos(x, y);
-			prevPos.x = x;
-			prevPos.y = y;
+			wchar_t buf[1024];
+			_snwprintf_s(buf, 1024, _TRUNCATE, L"prev x: %d, prev y: %d\n", prevPos.x, prevPos.y);
+			OutputDebugString(buf);
+			_snwprintf_s(buf, 1024, _TRUNCATE, L"curr x: %d, curr y: %d\n", currPos.x, currPos.y);
+			OutputDebugString(buf);
+			_snwprintf_s(buf, 1024, _TRUNCATE, L"new x: %d, new y: %d\n", x, y);
+			OutputDebugString(buf);
+			SetCursorPos(x, y);
+			GetCursorPos(&prevPos);
+			/*prevPos.x = x;
+			prevPos.y = y;*/
 		}
 		break;
 	case WM_PAINT:
