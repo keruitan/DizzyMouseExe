@@ -30,14 +30,13 @@ BOOL IsWinVistaOrLater()
 
 NOTIFYICONDATA nid = {};
 
-//static const UINT UWM_MOUSEMOVE;
 POINT currPos;
 POINT prevPos;
 LONG vx;
 LONG vy;
 int x;
 int y;
-double angle = 45.0;
+double angle = 15.0;
 double rad = angle * PI / 180.0; // move these to update whenever the menu is updated
 double cosA = cos(rad);
 double sinA = sin(rad);
@@ -104,7 +103,7 @@ int CALLBACK WinMain(
 		szTitle,
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		500, 100,
+		0, 0,
 		NULL,
 		NULL,
 		hInstance,
@@ -142,11 +141,6 @@ int CALLBACK WinMain(
 	nid.hIcon = LoadIcon(hInst, IDI_APPLICATION);
 	Shell_NotifyIcon(NIM_ADD, &nid) ? S_OK : E_FAIL;
 	prevPos.x = -1;
-	// The parameters to ShowWindow explained:
-	// hWnd: the value returned from CreateWindow
-	// nCmdShow: the fourth parameter from WinMain
-	ShowWindow(hWnd, nCmdShow);
-	UpdateWindow(hWnd);
 
 	// Main message loop:
 	MSG msg;
@@ -165,46 +159,16 @@ LRESULT CALLBACK WndProc(
 	WPARAM wParam,        // additional information 
 	LPARAM lParam)        // additional information 
 {
-	/*static HMENU hmenu;*/
-
-	HDC hdc;            // handle to device context
-	PAINTSTRUCT ps;
-	TCHAR greeting[] = _T("Hello, Windows desktop!");
-	TCHAR greeting2[] = _T("Hello, WinVista or later!");
-
 	switch (message)
 	{
 	case WM_CREATE:
-
-		// Save the menu handle
-		//hmenu = GetMenu(hWnd);
-
-		OutputDebugString(_T("create\n"));
 		setHook(hWnd);
-		//switch (LOWORD(wParam))
-		//{
-		//	// The user selected a hook command from the menu. 
-		//case IDM_MOUSE:
-
-		//	// Use the menu-item identifier as an index 
-		//	// into the array of structures with hook data. 
-
-		//	index = LOWORD(wParam);
-		//	OutputDebugString(_T("Mouse hook\n"));
-
-		//default:
-		//	return (DefWindowProc(hWnd, message, wParam,
-		//		lParam));
-		//}
 		break;
 	case WH_MOUSE:
-		OutputDebugString(_T("Msg received\n"));
 		if (prevPos.x<0) {
-			OutputDebugString(_T("1st\n"));
 			GetCursorPos(&prevPos);
 		}
 		else {
-			OutputDebugString(_T("gotcha\n"));
 			GetCursorPos(&currPos);
 			if (currPos.x == prevPos.x && currPos.y == prevPos.y) {
 				break;
@@ -216,33 +180,9 @@ LRESULT CALLBACK WndProc(
 			y = prevPos.y + round(sinA*vx + cosA*vy);
 
 			SetCursorPos(x, y);
-			wchar_t buf[1024];
-			_snwprintf_s(buf, 1024, _TRUNCATE, L"prev x: %d, prev y: %d\n", prevPos.x, prevPos.y);
-			OutputDebugString(buf);
-			_snwprintf_s(buf, 1024, _TRUNCATE, L"curr x: %d, curr y: %d\n", currPos.x, currPos.y);
-			OutputDebugString(buf);
-			_snwprintf_s(buf, 1024, _TRUNCATE, L"new x: %d, new y: %d\n", x, y);
-			OutputDebugString(buf);
-			
 			prevPos.x = x;
 			prevPos.y = y;
 		}
-		break;
-	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);
-
-		if (IsWinVistaOrLater())
-		{
-			TextOut(hdc,
-				5, 5,
-				greeting2, _tcslen(greeting2));
-		} else
-		{
-			TextOut(hdc,
-				5, 5,
-				greeting, _tcslen(greeting));
-		}
-		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
 		unHook(hWnd);
