@@ -38,7 +38,9 @@ LONG vy;
 int x;
 int y;
 double angle = 45.0;
-double rad = -angle * PI / 180.0;
+double rad = angle * PI / 180.0; // move these to update whenever the menu is updated
+double cosA = cos(rad);
+double sinA = sin(rad);
 
 // The main window class name.
 static TCHAR szWindowClass[] = _T("DesktopApp");
@@ -102,7 +104,7 @@ int CALLBACK WinMain(
 		szTitle,
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		500, 500,
+		500, 100,
 		NULL,
 		NULL,
 		hInstance,
@@ -140,21 +142,10 @@ int CALLBACK WinMain(
 	nid.hIcon = LoadIcon(hInst, IDI_APPLICATION);
 	Shell_NotifyIcon(NIM_ADD, &nid) ? S_OK : E_FAIL;
 	prevPos.x = -1;
-	/*UWM_MOUSEMOVE = ::RegisterWindowMessage(UWM_MOUSEMOVE_MSG);
-	if (!UWM_MOUSEMOVE) {
-		MessageBox(NULL,
-			_T("Call to RegisterWindowMessage failed!"),
-			_T("Windows Desktop Guided Tour"),
-			NULL);
-
-		return 1;
-	}*/
-
 	// The parameters to ShowWindow explained:
 	// hWnd: the value returned from CreateWindow
 	// nCmdShow: the fourth parameter from WinMain
-	ShowWindow(hWnd,
-		nCmdShow);
+	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
 	// Main message loop:
@@ -174,12 +165,8 @@ LRESULT CALLBACK WndProc(
 	WPARAM wParam,        // additional information 
 	LPARAM lParam)        // additional information 
 {
-	/*static BOOL afHooks[NUMHOOKS];
-	int index;
-	static HMENU hmenu;*/
+	/*static HMENU hmenu;*/
 
-	//LPMOUSEHOOKSTRUCT mouse; // mousehookstruct data
-	//POINT pos;
 	HDC hdc;            // handle to device context
 	PAINTSTRUCT ps;
 	TCHAR greeting[] = _T("Hello, Windows desktop!");
@@ -190,19 +177,8 @@ LRESULT CALLBACK WndProc(
 	case WM_CREATE:
 
 		// Save the menu handle
-
 		//hmenu = GetMenu(hWnd);
 
-		// Initialize structures with hook data. The menu-item identifiers are 
-		// defined as 0 through 6 in the header file app.h. They can be used to 
-		// identify array elements both here and during the WM_COMMAND message. 
-
-		/*myhookdata[IDM_MOUSE].nType = WH_MOUSE;
-		myhookdata[IDM_MOUSE].hkprc = MouseProc;*/
-
-		// Initialize all flags in the array to FALSE. 
-
-		//memset(afHooks, FALSE, sizeof(afHooks));
 		OutputDebugString(_T("create\n"));
 		setHook(hWnd);
 		//switch (LOWORD(wParam))
@@ -223,11 +199,8 @@ LRESULT CALLBACK WndProc(
 		break;
 	case WH_MOUSE:
 		OutputDebugString(_T("Msg received\n"));
-		//mouse = (LPMOUSEHOOKSTRUCT)lParam;
 		if (prevPos.x<0) {
 			OutputDebugString(_T("1st\n"));
-			//POINT pos = mouse->pt;
-			//prevPos.x = 1;
 			GetCursorPos(&prevPos);
 		}
 		else {
@@ -238,19 +211,11 @@ LRESULT CALLBACK WndProc(
 			}
 			vx = currPos.x - prevPos.x; // vector coordinates, now rotate?
 			vy = currPos.y - prevPos.y;
-			if (vx < 0) {
-				x = prevPos.x - round(cos(rad*vx) - sin(rad*vy));
-			}
-			else {
-				x = prevPos.x + round(cos(rad*vx) - sin(rad*vy));
-			}
-			if (vy < 0) {
-				y = prevPos.y + round(sin(rad*vx) + cos(rad*vy));
-			}
-			else {
-				y = prevPos.y - round(sin(rad*vx) + cos(rad*vy));
-			}
 			
+			x = prevPos.x + round(vx*cosA - vy*sinA);
+			y = prevPos.y + round(sinA*vx + cosA*vy);
+
+			SetCursorPos(x, y);
 			wchar_t buf[1024];
 			_snwprintf_s(buf, 1024, _TRUNCATE, L"prev x: %d, prev y: %d\n", prevPos.x, prevPos.y);
 			OutputDebugString(buf);
@@ -258,10 +223,9 @@ LRESULT CALLBACK WndProc(
 			OutputDebugString(buf);
 			_snwprintf_s(buf, 1024, _TRUNCATE, L"new x: %d, new y: %d\n", x, y);
 			OutputDebugString(buf);
-			SetCursorPos(x, y);
-			GetCursorPos(&prevPos);
-			/*prevPos.x = x;
-			prevPos.y = y;*/
+			
+			prevPos.x = x;
+			prevPos.y = y;
 		}
 		break;
 	case WM_PAINT:
@@ -290,31 +254,3 @@ LRESULT CALLBACK WndProc(
 	}
 	return NULL;
 }
-
-void rotateCursor() {
-
-}
-
-/****************************************************************
-WH_MOUSE hook procedure
-****************************************************************/
-
-//LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
-//{
-//	if (nCode < 0)  // do not process the message 
-//		return CallNextHookEx(myhookdata[IDM_MOUSE].hhook, nCode,
-//			wParam, lParam);
-//	GetCursorPos(&pt);
-//	xpos = LOWORD(lParam);
-//	ypos = HIWORD(lParam);
-//
-//	vx = pt.x - cursorPos.x;
-//	vy = pt.y - cursorPos.y;
-//
-//	SetCursorPos(cursorPos.x + (cos((angle*PI / 180.0)*vx) - sin((angle*PI / 180.0)*vy)), cursorPos.y + (sin((angle*PI / 180.0)*vx) + cos((angle*PI / 180.0)*vy)));
-//	GetCursorPos(&cursorPos);
-//
-//	OutputDebugString(_T("In mouse proc/n"));
-//
-//	return CallNextHookEx(myhookdata[IDM_MOUSE].hhook, nCode, wParam, lParam);
-//}
