@@ -97,7 +97,7 @@ int CALLBACK WinMain(
 		return 1;
 	}
 
-	prevPos.x = -1;
+	prevPos.x = LONG_MIN;
 
 	// Main message loop:
 	MSG msg;
@@ -122,7 +122,7 @@ LRESULT CALLBACK WndProc(
 		setHook(hWnd);
 		break;
 	case WH_MOUSE:
-		if (prevPos.x<0) {
+		if (prevPos.x==LONG_MIN) {
 			GetCursorPos(&prevPos);
 		}
 		else {
