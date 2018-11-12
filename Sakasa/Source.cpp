@@ -7,28 +7,6 @@
 #include "Cheese.h"
 #include "main.h"
 
-// Global variables
-BOOL IsWinVistaOrLater()
-{
-	// Initialize the OSVERSIONINFOEX structure.
-	OSVERSIONINFOEX osvi;
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	osvi.dwMajorVersion = 6;
-	osvi.dwMinorVersion = 0;
-
-	// Initialize the condition mask.
-	DWORDLONG dwlConditionMask = 0;
-	VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
-	VER_SET_CONDITION(dwlConditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
-
-	// Perform the test.
-	return VerifyVersionInfo(&osvi,
-		VER_MAJORVERSION | VER_MINORVERSION,
-		dwlConditionMask);
-}
-
-NOTIFYICONDATA nid = {};
 
 POINT currPos;
 POINT prevPos;
@@ -37,7 +15,7 @@ LONG vy;
 int x;
 int y;
 double angle = 15.0;
-double rad = angle * PI / 180.0; // move these to update whenever the menu is updated
+double rad = angle * PI / 180.0;
 double cosA = cos(rad);
 double sinA = sin(rad);
 
@@ -45,12 +23,11 @@ double sinA = sin(rad);
 static TCHAR szWindowClass[] = _T("DesktopApp");
 
 // The string that appears in the application's title bar.
-static TCHAR szTitle[] = _T("Test Rotate");
+static TCHAR szTitle[] = _T("Dizzy Mouse");
 
 HINSTANCE hInst;
 
 // Forward declaration
-//LRESULT WINAPI MouseProc(int, WPARAM, LPARAM);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 int CALLBACK WinMain(
@@ -93,7 +70,7 @@ int CALLBACK WinMain(
 	// szTitle: the text that appears in the title bar
 	// WS_OVERLAPPEDWINDOW: the type of window to create
 	// CW_USEDEFAULT, CW_USEDEFAULT: initial position (x, y)
-	// 500, 100: initial size (width, length)
+	// 0, 0: initial size (width, length)
 	// NULL: the parent of this window
 	// NULL: this application does not have a menu bar
 	// hInstance: the first parameter from WinMain
@@ -119,27 +96,7 @@ int CALLBACK WinMain(
 
 		return 1;
 	}
-	// Initialize NotifyIconData (XP or above)
-	IsWinVistaOrLater() ? nid.cbSize = sizeof(nid) : nid.cbSize = NOTIFYICONDATA_V3_SIZE;
-	nid.hWnd = hWnd;
-	nid.uFlags = NIF_ICON | NIF_TIP | NIF_GUID;
 
-	// {B937B6E9-2535-4D0E-9513-3A3F29CD26EC}
-	static const GUID myGUID =
-	{ 0xb937b6e9, 0x2535, 0x4d0e, { 0x95, 0x13, 0x3a, 0x3f, 0x29, 0xcd, 0x26, 0xec } };
-	nid.guidItem = myGUID;
-
-	//set icon's tooltip
-	if FAILED(StringCchCopy(nid.szTip, ARRAYSIZE(nid.szTip), L"Test application")) {
-		MessageBox(NULL,
-			_T("Call to StringCchCopy for szTip failed!"),
-			_T("Windows Desktop Guided Tour"),
-			NULL);
-
-		return 1;
-	}
-	nid.hIcon = LoadIcon(hInst, IDI_APPLICATION);
-	Shell_NotifyIcon(NIM_ADD, &nid) ? S_OK : E_FAIL;
 	prevPos.x = -1;
 
 	// Main message loop:
@@ -173,7 +130,7 @@ LRESULT CALLBACK WndProc(
 			if (currPos.x == prevPos.x && currPos.y == prevPos.y) {
 				break;
 			}
-			vx = currPos.x - prevPos.x; // vector coordinates, now rotate?
+			vx = currPos.x - prevPos.x; // vector coordinates, now rotate
 			vy = currPos.y - prevPos.y;
 			
 			x = prevPos.x + round(vx*cosA - vy*sinA);
