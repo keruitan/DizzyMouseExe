@@ -8,6 +8,7 @@
 #include "main.h"
 
 
+// Global variables
 POINT currPos;
 POINT prevPos;
 LONG vx;
@@ -18,6 +19,8 @@ double angle = 15.0;
 double rad = angle * PI / 180.0;
 double cosA = cos(rad);
 double sinA = sin(rad);
+HANDLE ghMutex;
+DWORD error;
 
 // The main window class name.
 static TCHAR szWindowClass[] = _T("DesktopApp");
@@ -37,6 +40,37 @@ int CALLBACK WinMain(
 	_In_ int       nCmdShow
 )
 {
+	// ensure single instance with mutex
+	ghMutex = CreateMutex(NULL, FALSE, _T("DizzyMouseCheck"));
+	error = GetLastError();
+	if (!ghMutex) {
+		MessageBox(NULL,
+			_T("Call to CreateMutex failed!"),
+			_T("Windows Desktop Guided Tour"),
+			NULL);
+
+		return 1;
+	}
+
+	switch (error)
+	{ // mutex already exists, so return (close this instance since there is an existing instance)
+	case ERROR_ALREADY_EXISTS:
+		return 1;
+		break;
+	case ERROR_ACCESS_DENIED:
+		ghMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, _T("DizzyMouseCheck"));
+		if (!ghMutex) {
+			MessageBox(NULL,
+				_T("Call to OpenMutex failed!"),
+				_T("Windows Desktop Guided Tour"),
+				NULL);
+			return 1;
+		}
+		break;
+	default:
+		break;
+	}
+
 	WNDCLASSEX wcex;
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
@@ -130,7 +164,7 @@ LRESULT CALLBACK WndProc(
 			if (currPos.x == prevPos.x && currPos.y == prevPos.y) {
 				break;
 			}
-			vx = currPos.x - prevPos.x; // vector coordinates, now rotate
+			vx = currPos.x - prevPos.x; // vector, now rotate
 			vy = currPos.y - prevPos.y;
 			
 			x = prevPos.x + round(vx*cosA - vy*sinA);
@@ -143,6 +177,7 @@ LRESULT CALLBACK WndProc(
 		break;
 	case WM_DESTROY:
 		unHook(hWnd);
+		CloseHandle(ghMutex);
 		PostQuitMessage(0);
 		break;
 	default:
